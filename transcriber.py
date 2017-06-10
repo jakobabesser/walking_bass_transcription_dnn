@@ -6,6 +6,7 @@ import librosa
 from keras.models import model_from_json
 
 __author__ = 'Jakob Abesser'
+__copyright__ = 'J. Abesser, S. Balke, K. Frieler, M. Pfleiderer, M. Mueller, 2017'
 
 
 class WalkingBassTranscription:
