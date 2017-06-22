@@ -43,6 +43,7 @@ which can be imported into an empty pane in SonicVisualizer using the parameters
  - Timing is specified: Implicitly: rows are equally spaced in time
  - Audio sample rate (Hz): 22050
  - Frame increment between rows: 1024
+ 
 Here's an example of the output:
  - WAV form
  - Spectrogram (colour: green, scale: dBV, window: 8192, overlap 93.75%, Bins: all bins, log)
