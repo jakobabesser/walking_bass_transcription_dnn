@@ -27,10 +27,16 @@ and activated it via
 ```
 source activate walking_bass_transcription
 ```
+
+## Demo
+
 Now you can run the transcription algorithm on a test file by calling
 ```
 python transcriber.py
 ```
 Please see the docstrings for further documentation.
+
+![Sonic Visualizer Screenshot](data/Sonic_Visualizer_Screenshot.png "Bass saliency for excerpt from Art Pepper's solo on Anthropology")
+
 
 Enjoy.
