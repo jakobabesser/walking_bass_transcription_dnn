@@ -68,7 +68,7 @@ class WalkingBassTranscription:
                    dir_out=None,
                    beat_times=None,
                    tuning_frequency_hz=440.,
-                   threshold=0.3):
+                   threshold=0.2):
         """ Transcribe audio file
         Args:
             fn_wav (string): WAV file name
@@ -241,7 +241,7 @@ if __name__ == '__main__':
                         "does not produce note-level outputs.")
     parser.add_argument("-t", "--threshold",
                         type=float,
-                        default=0.3,
+                        default=0.2,
                         help="Amplitude threshold. Only used when "
                         "output_format is singlef0 or multif0")
 
