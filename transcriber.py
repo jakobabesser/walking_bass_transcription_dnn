@@ -70,6 +70,10 @@ class WalkingBassTranscription:
             dir_out (string): Directory to store results (if None, same directory as fn_wav is used)
             beat_times (ndarray): Beat times in seconds (if None, only bass saliency is extracted)
             tuning_frequency_hz (float): Tuning frequency (Hz)
+        Returns:
+            pitch_saliency (2d ndarray): Bass pitch saliency (num_pitches x num_frames)
+            midi_axis (ndarray): MIDI pitch values of pitch axis
+            time_axis_sec (ndarray): Time frames [s]
         """
         tuning_dev_in_semitones = np.log2(tuning_frequency_hz/440.)*12
 
@@ -132,6 +136,8 @@ class WalkingBassTranscription:
             np.savetxt(os.path.join(dir_out, '{}_bass_line.csv'.format(base_name)),
                        score_mat,
                        fmt='%4.4f,%4.4f,%d')
+
+        return pitch_saliency, self.f_axis_midi, time_axis_sec
 
 
 def closest_bin(axis, val):
