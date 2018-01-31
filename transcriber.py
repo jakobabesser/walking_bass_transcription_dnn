@@ -1,9 +1,13 @@
+from __future__ import print_function
 import os
+import csv
 import numpy as np
 from scipy.signal import decimate
 import soundfile as sf
 import librosa
 from keras.models import model_from_json
+
+import argparse
 
 __author__ = 'Jakob Abesser'
 __copyright__ = 'J. Abesser, S. Balke, K. Frieler, M. Pfleiderer, M. Mueller, 2017'
@@ -63,7 +67,8 @@ class WalkingBassTranscription:
                    fn_wav,
                    dir_out=None,
                    beat_times=None,
-                   tuning_frequency_hz=440.):
+                   tuning_frequency_hz=440.,
+                   threshold=0.2):
         """ Transcribe audio file
         Args:
             fn_wav (string): WAV file name
@@ -110,12 +115,26 @@ class WalkingBassTranscription:
 
         # model prediction
         pitch_saliency = self.model.predict(features)
+        print(pitch_saliency.shape)
+        print(time_axis_sec.shape)
 
         base_name = os.path.basename(fn_wav).replace('.wav', '')
-        np.savetxt(os.path.join(dir_out, '{}_bass_pitch_saliency.csv'.format(base_name)),
-                                pitch_saliency,
-                   delimiter=',',
-                   fmt='%4.4f')
+        np.save(
+            os.path.join(dir_out, '{}_bass_pitch_saliency.npy'.format(base_name)),
+            pitch_saliency
+        )
+
+        with open(os.path.join(dir_out, '{}_bass_f0.csv'.format(base_name)), 'w') as fhandle:
+            writer = csv.writer(fhandle, delimiter=',')
+            for t in range(pitch_saliency.shape[0]):
+                i = np.argmax(pitch_saliency[t])
+                time_val = time_axis_sec[t]
+                if pitch_saliency[t, i] >= threshold:
+                    freq_val = self.f_axis_hz[i]
+                else:
+                    freq_val = -1*self.f_axis_hz[i]
+
+                writer.writerow([time_val, freq_val])
 
         # beat-wise pitch estimation
         if beat_times is not None:
@@ -124,7 +143,9 @@ class WalkingBassTranscription:
             beat_bass_pitch = np.zeros(num_beats)
 
             for b in range(num_beats):
-                beat_pitch_saliency = np.mean(pitch_saliency[beat_frames[b]: beat_frames[b+1], :], axis=0)
+                beat_pitch_saliency = np.mean(
+                    pitch_saliency[beat_frames[b]: beat_frames[b+1], :], axis=0
+                )
                 best_pitch_idx = np.argmax(beat_pitch_saliency)
                 beat_bass_pitch[b] = self.f_axis_midi[best_pitch_idx]
 
@@ -186,15 +207,48 @@ def normalize_euclidean(x):
     return x / np.sqrt(np.sum(np.square(x), axis=1, keepdims=True))
 
 
-if __name__ == '__main__':
-    # let's transcribe an example file from the Weimar Jazz Database
-    fn_wav = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'data', 'ArtPepper_Anthropology_Excerpt.wav')
-    fn_csv_beats = fn_wav.replace('.wav', '_beat_times.csv')
-    beat_times = np.loadtxt(fn_csv_beats, delimiter=',', usecols=[0])
+def main(args):
+    """Main method to run transcription
+    """
+
+    # parse beats_file argument
+    if args.beats_file == '':
+        beat_times = None
+    elif not os.path.exists(args.beats_file):
+        beat_times = None
+        print("[Warning] Could not find provided beats file.")
+    else:
+        beat_times = np.loadtxt(args.beat_file, delimiter=',', usecols=[0])    
+
     transcriber = WalkingBassTranscription()
 
-    transcriber.transcribe(fn_wav,
-                           dir_out=os.path.dirname(fn_wav),
-                           beat_times=beat_times)
+    transcriber.transcribe(args.input_wav,
+                           dir_out=args.output_dir,
+                           beat_times=beat_times,
+                           threshold=args.threshold)
 
     print('Finished bass line transcription! :)')
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description="Predict walking bass salience or f0"
+                    "from and audio file.")
+    parser.add_argument("input_wav",
+                        type=str,
+                        help="Path to input wav file.")
+    parser.add_argument("output_dir",
+                        type=str,
+                        help="Path to save location of bass transcription.")
+    parser.add_argument("-b", "--beats_file",
+                        type=str,
+                        default='',
+                        help="Path to beat annotation file. If not given, "
+                        "does not produce note-level outputs.")
+    parser.add_argument("-t", "--threshold",
+                        type=float,
+                        default=0.2,
+                        help="Amplitude threshold. Only used when "
+                        "output_format is singlef0 or multif0")
+
+    main(parser.parse_args())
