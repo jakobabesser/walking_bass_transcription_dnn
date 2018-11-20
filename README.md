@@ -50,3 +50,11 @@ Here's an example of the output:
 
 
 Enjoy.
+
+## adaptive tatum detection
+
+Now the transcriber has a new aggregation method 'flex-q', which checks for each beat, which tatum subdivision is the most likely one. The note events are generated accordingly. 
+
+## pitch saliency threshold
+
+Furthermore, a lower saliency thresholds allows to ignore beats / sub-beats where the pitch saliency is too low.
